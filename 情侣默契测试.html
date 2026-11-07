@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>情侣默契大测试</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: linear-gradient(135deg, #1a0a0a 0%, #2d0a0a 30%, #4a1010 60%, #2d0a0a 100%);
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    color: #fff;
+    overflow-x: hidden;
+  }
+  .container { max-width: 520px; margin: 0 auto; padding: 20px 16px 40px; }
+
+  /* === 欢迎页 === */
+  .welcome {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 90vh;
+    text-align: center;
+  }
+  .heart-emoji { font-size: 80px; animation: heartbeat 1.2s ease-in-out infinite; margin-bottom: 20px; }
+  @keyframes heartbeat {
+    0%, 100% { transform: scale(1); }
+    15% { transform: scale(1.15); }
+    30% { transform: scale(1); }
+    45% { transform: scale(1.1); }
+  }
+  .welcome h1 { font-size: 28px; margin-bottom: 12px; background: linear-gradient(90deg, #ff6b6b, #ff8e8e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .welcome p { font-size: 15px; color: #cc9999; margin-bottom: 40px; line-height: 1.6; }
+  .btn-start {
+    background: linear-gradient(90deg, #e74c5c, #ff6b6b);
+    border: none; border-radius: 50px; padding: 16px 60px;
+    font-size: 18px; color: #fff; cursor: pointer;
+    box-shadow: 0 4px 20px rgba(231, 76, 92, 0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .btn-start:active { transform: scale(0.96); }
+
+  /* === 答题页 === */
+  .quiz { display: none; }
+  .progress-bar {
+    width: 100%; height: 6px; background: rgba(255,255,255,0.1);
+    border-radius: 3px; margin-bottom: 30px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; background: linear-gradient(90deg, #e74c5c, #ff6b6b);
+    border-radius: 3px; transition: width 0.4s ease;
+  }
+  .question-num { font-size: 13px; color: #999; margin-bottom: 8px; }
+  .question-text {
+    font-size: 20px; font-weight: 600; line-height: 1.5;
+    margin-bottom: 30px; color: #fff;
+  }
+  .options { display: flex; flex-direction: column; gap: 12px; }
+  .option-btn {
+    background: rgba(255,255,255,0.08);
+    border: 1.5px solid rgba(255,255,255,0.15);
+    border-radius: 14px; padding: 16px 20px;
+    font-size: 16px; color: #eee; cursor: pointer;
+    text-align: left; transition: all 0.25s;
+    line-height: 1.5;
+  }
+  .option-btn:active { transform: scale(0.98); }
+  .option-btn.selected {
+    background: rgba(231, 76, 92, 0.3);
+    border-color: #e74c5c;
+    color: #ff8e8e;
+  }
+
+  /* === 结果页 === */
+  .result { display: none; text-align: center; padding-top: 40px; }
+  .heart-container {
+    position: relative; width: 220px; height: 220px;
+    margin: 0 auto 30px;
+  }
+  .heart-svg { width: 220px; height: 220px; }
+  .heart-bg { fill: #2a0a0a; }
+  .heart-fill { fill: url(#heartGrad); transition: all 1s ease; }
+  .score-text {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 52px; font-weight: 800; color: #fff;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+  }
+  .score-label { font-size: 15px; color: #cc9999; margin-bottom: 8px; }
+  .result-title { font-size: 24px; font-weight: 700; margin-bottom: 12px; }
+  .result-desc { font-size: 15px; color: #cc9999; line-height: 1.7; margin-bottom: 30px; padding: 0 10px; }
+  .btn-restart {
+    background: rgba(255,255,255,0.1);
+    border: 1.5px solid rgba(255,255,255,0.2);
+    border-radius: 50px; padding: 12px 40px;
+    font-size: 16px; color: #fff; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-restart:active { transform: scale(0.96); }
+
+  /* 过渡动画 */
+  .fade { animation: fadeIn 0.4s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* 浮动爱心背景 */
+  .floating-hearts { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: hidden; }
+  .float-heart { position: absolute; font-size: 20px; opacity: 0.15; animation: floatUp 8s linear infinite; }
+  @keyframes floatUp {
+    0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+    10% { opacity: 0.15; }
+    90% { opacity: 0.15; }
+    100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="floating-hearts" id="floatHearts"></div>
+
+<div class="container">
+
+  <!-- 欢迎页 -->
+  <div class="welcome" id="welcomePage">
+    <div class="heart-emoji">💕</div>
+    <h1>情侣默契大测试</h1>
+    <p>你们真的了解彼此吗？<br>回答下面的问题，看看你们的默契指数！<br><br><span style="font-size:13px;color:#888;">共 10 道题 · 约 2 分钟</span></p>
+    <button class="btn-start" onclick="startQuiz()">开始测试</button>
+  </div>
+
+  <!-- 答题页 -->
+  <div class="quiz" id="quizPage">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="question-num" id="questionNum"></div>
+    <div class="question-text" id="questionText"></div>
+    <div class="options" id="optionsBox"></div>
+  </div>
+
+  <!-- 结果页 -->
+  <div class="result" id="resultPage">
+    <div class="heart-container">
+      <svg class="heart-svg" viewBox="0 0 100 90">
+        <defs>
+          <linearGradient id="heartGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#ff4d6d"/>
+            <stop offset="100%" style="stop-color:#ff8e8e"/>
+          </linearGradient>
+        </defs>
+        <path class="heart-bg" d="M50,88 C20,60 5,40 5,25 C5,10 20,0 35,0 C43,0 50,7 50,7 C50,7 57,0 65,0 C80,0 95,10 95,25 C95,40 80,60 50,88 Z"/>
+        <path class="heart-fill" id="heartFill" d="M50,88 C20,60 5,40 5,25 C5,10 20,0 35,0 C43,0 50,7 50,7 C50,7 57,0 65,0 C80,0 95,10 95,25 C95,40 80,60 50,88 Z" clip-path="url(#clip0)"/>
+        <clipPath id="clip0"><rect id="clipRect" x="0" y="90" width="100" height="0"/></clipPath>
+      </svg>
+      <div class="score-text" id="scoreText">0%</div>
+    </div>
+    <div class="score-label">默契指数</div>
+    <div class="result-title" id="resultTitle"></div>
+    <div class="result-desc" id="resultDesc"></div>
+    <button class="btn-restart" onclick="restart()">再测一次</button>
+  </div>
+
+</div>
+
+<script>
+// ═══ 题目数据（可自定义修改） ═══
+const questions = [
+  {
+    q: "对方生日是几月几日？",
+    options: ["精确到天", "记得月份，不确定日期", "只记得星座", "完全不记得"],
+    scores: [100, 60, 30, 0]
+  },
+  {
+    q: "对方最喜欢吃什么菜？",
+    options: ["说出来好几道，全中", "大概知道", "只能说出一个", "完全不知道"],
+    scores: [100, 60, 30, 0]
+  },
+  {
+    q: "对方的手机解锁密码你知道几位？",
+    options: ["全知道", "知道大部分", "只知道前两位", "完全不知道"],
+    scores: [100, 60, 30, 0]
+  },
+  {
+    q: "对方生气的时候通常怎么哄？",
+    options: ["门儿清，屡试不爽", "大概知道方法", "只会说别生气了", "等他自己好"],
+    scores: [100, 70, 40, 0]
+  },
+  {
+    q: "对方小时候的梦想是什么？",
+    options: ["知道，还聊过很多次", "听说过大概", "从没听Ta提起过", "完全不关心"],
+    scores: [100, 60, 20, 0]
+  },
+  {
+    q: "对方最害怕的东西是什么？",
+    options: ["知道得一清二楚", "大概了解", "有点印象", "完全不知道"],
+    scores: [100, 60, 30, 0]
+  },
+  {
+    q: "对方的第一段感情经历发生在什么时候？",
+    options: ["知道细节，TA都告诉我了", "知道大概时间", "只知道有过", "完全不知道"],
+    scores: [100, 60, 30, 0]
+  },
+  {
+    q: "对方的朋友圈里，最常出现的异性朋友是谁？",
+    options: ["知道是谁，也认识", "知道有这个人", "从来没注意过", "不知道，也不想知道"],
+    scores: [100, 60, 20, 0]
+  },
+  {
+    q: "对方最近最想做的事是什么？",
+    options: ["知道，还计划过一起完成", "大概知道", "听说过一点", "完全不知道"],
+    scores: [100, 60, 30, 0]
+  },
+  {
+    q: "你认为对方为你做过最感动的一件事是？",
+    options: ["能说出好几件具体的事", "能说出一件", "大概有印象但说不清", "想不起来"],
+    scores: [100, 60, 30, 0]
+  }
+];
+
+// ═══ 状态 ═══
+let current = 0;
+let totalScore = 0;
+let answers = [];
+
+// ═══ 浮动爱心背景 ═══
+function createFloatingHearts() {
+  const container = document.getElementById('floatHearts');
+  const symbols = ['❤️', '💕', '💗', '💓', '🫶'];
+  for (let i = 0; i < 15; i++) {
+    const span = document.createElement('span');
+    span.className = 'float-heart';
+    span.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+    span.style.left = Math.random() * 100 + '%';
+    span.style.animationDelay = Math.random() * 8 + 's';
+    span.style.animationDuration = (6 + Math.random() * 6) + 's';
+    container.appendChild(span);
+  }
+}
+
+// ═══ 开始答题 ═══
+function startQuiz() {
+  current = 0;
+  totalScore = 0;
+  answers = [];
+  document.getElementById('welcomePage').style.display = 'none';
+  document.getElementById('resultPage').style.display = 'none';
+  document.getElementById('quizPage').style.display = 'block';
+  showQuestion();
+}
+
+// ═══ 显示题目 ═══
+function showQuestion() {
+  const q = questions[current];
+  document.getElementById('questionNum').textContent = `第 ${current + 1} / ${questions.length} 题`;
+  document.getElementById('questionText').textContent = q.q;
+  document.getElementById('progressFill').style.width = ((current) / questions.length * 100) + '%';
+
+  const box = document.getElementById('optionsBox');
+  box.innerHTML = '';
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn fade';
+    btn.textContent = opt;
+    btn.onclick = () => selectOption(i, btn);
+    box.appendChild(btn);
+  });
+}
+
+// ═══ 选择答案 ═══
+function selectOption(index, btn) {
+  // 标记选中
+  const allBtns = document.querySelectorAll('.option-btn');
+  allBtns.forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+
+  // 记录分数
+  totalScore += questions[current].scores[index];
+  answers.push(index);
+
+  // 延迟跳下一题
+  setTimeout(() => {
+    current++;
+    if (current < questions.length) {
+      showQuestion();
+    } else {
+      showResult();
+    }
+  }, 350);
+}
+
+// ═══ 显示结果 ═══
+function showResult() {
+  document.getElementById('quizPage').style.display = 'none';
+  document.getElementById('resultPage').style.display = 'block';
+
+  const percent = Math.round(totalScore / questions.length);
+  document.getElementById('progressFill').style.width = '100%';
+
+  // 爱心填充动画
+  const clipRect = document.getElementById('clipRect');
+  const scoreText = document.getElementById('scoreText');
+  let currentP = 0;
+  const targetP = percent;
+  const step = targetP / 40;
+  const timer = setInterval(() => {
+    currentP += step;
+    if (currentP >= targetP) { currentP = targetP; clearInterval(timer); }
+    clipRect.setAttribute('height', (currentP / 100 * 90).toFixed(2));
+    clipRect.setAttribute('y', (90 - currentP / 100 * 90).toFixed(2));
+    scoreText.textContent = Math.round(currentP) + '%';
+  }, 30);
+
+  // 评语
+  let title, desc;
+  if (percent >= 90) {
+    title = "💘 灵魂伴侣，默契满分！"; desc = "天呐！你们简直是彼此肚子里的蛔虫！不是天生一对，哪能这么懂对方？祝你们永远这么甜！";
+  } else if (percent >= 70) {
+    title = "💗 非常默契，羡煞旁人！"; desc = "你们对彼此的了解已经相当深入了！继续保持这份用心和关注，你们的感情会越来越牢固。";
+  } else if (percent >= 50) {
+    title = "💛 还过得去，继续加油！"; desc = "你们对彼此有一定的了解，但还有很多值得去探索的惊喜。多聊聊、多关心，默契是可以培养的！";
+  } else if (percent >= 30) {
+    title = "🧡 基础了解，有待加强"; desc = "看来你们还需要更多时间互相了解哦～多花点心思在对方身上，你会发现不一样的Ta！";
+  } else {
+    title = "💔 路人甲乙，真的熟吗？"; desc = "emmm…建议你们放下手机，好好聊聊彼此吧！默契不是天生的，是需要用心经营的。加油！";
+  }
+
+  document.getElementById('resultTitle').textContent = title;
+  document.getElementById('resultDesc').textContent = desc;
+}
+
+// ═══ 重新开始 ═══
+function restart() {
+  startQuiz();
+}
+
+// ═══ 初始化 ═══
+createFloatingHearts();
+</script>
+</body>
+</html>
