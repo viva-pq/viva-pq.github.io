@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="记账本" />
+<meta name="theme-color" content="#6366f1" />
+<title>记账本</title>
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="icons/icon-192.png" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<!-- 顶部状态栏占位 -->
+<div class="safe-top"></div>
+
+<!-- 主容器 -->
+<div class="app">
+
+  <!-- 顶部栏 -->
+  <header class="header">
+    <div class="header-left">
+      <h1 class="app-title">记账本</h1>
+    </div>
+    <div class="header-right">
+      <button class="icon-btn" id="btn-month-picker" aria-label="选择月份">
+        <span id="current-month-text">本月</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- 页面：首页 -->
+  <main class="page active" id="page-home">
+    <!-- 余额卡片 -->
+    <section class="balance-card">
+      <div class="balance-label">本月结余</div>
+      <div class="balance-amount" id="balance-amount">¥0.00</div>
+      <div class="balance-row">
+        <div class="balance-item">
+          <div class="balance-item-label">收入</div>
+          <div class="balance-item-amount income" id="income-amount">¥0.00</div>
+        </div>
+        <div class="balance-divider"></div>
+        <div class="balance-item">
+          <div class="balance-item-label">支出</div>
+          <div class="balance-item-amount expense" id="expense-amount">¥0.00</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 分类支出占比 -->
+    <section class="card">
+      <div class="card-header">
+        <h2 class="card-title">支出分类</h2>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="category-chart" width="400" height="220"></canvas>
+      </div>
+      <div class="category-legend" id="category-legend"></div>
+    </section>
+
+    <!-- 近期账单 -->
+    <section class="card">
+      <div class="card-header">
+        <h2 class="card-title">近期账单</h2>
+        <button class="text-btn" id="btn-view-all">查看全部</button>
+      </div>
+      <div class="tx-list" id="recent-tx-list">
+        <div class="empty-state">
+          <div class="empty-icon">📒</div>
+          <div class="empty-text">还没有记录，点击下方 + 开始记账</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 页面：账单列表 -->
+  <main class="page" id="page-list">
+    <div class="filter-bar">
+      <div class="seg-control" id="type-filter">
+        <button class="seg-btn active" data-type="all">全部</button>
+        <button class="seg-btn" data-type="expense">支出</button>
+        <button class="seg-btn" data-type="income">收入</button>
+      </div>
+    </div>
+    <div class="tx-list" id="full-tx-list"></div>
+  </main>
+
+  <!-- 页面：统计 -->
+  <main class="page" id="page-stats">
+    <section class="card">
+      <div class="card-header">
+        <h2 class="card-title">月度趋势</h2>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="trend-chart" width="400" height="220"></canvas>
+      </div>
+    </section>
+    <section class="card">
+      <div class="card-header">
+        <h2 class="card-title">分类排行</h2>
+      </div>
+      <div id="category-ranking"></div>
+    </section>
+  </main>
+
+  <!-- 页面：我的 -->
+  <main class="page" id="page-profile">
+    <section class="card">
+      <div class="profile-header">
+        <div class="avatar">💰</div>
+        <div class="profile-info">
+          <div class="profile-name">我的账本</div>
+          <div class="profile-sub" id="profile-stat">共 0 笔记录</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="menu-list">
+        <button class="menu-item" id="btn-export">
+          <span class="menu-icon">📤</span>
+          <span class="menu-text">导出数据</span>
+          <span class="menu-arrow">›</span>
+        </button>
+        <button class="menu-item" id="btn-import">
+          <span class="menu-icon">📥</span>
+          <span class="menu-text">导入数据</span>
+          <span class="menu-arrow">›</span>
+        </button>
+        <input type="file" id="import-file" accept="application/json" hidden />
+        <button class="menu-item" id="btn-manage-categories">
+          <span class="menu-icon">🏷️</span>
+          <span class="menu-text">分类管理</span>
+          <span class="menu-arrow">›</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="menu-list">
+        <button class="menu-item danger" id="btn-clear-all">
+          <span class="menu-icon">🗑️</span>
+          <span class="menu-text">清空所有数据</span>
+          <span class="menu-arrow">›</span>
+        </button>
+      </div>
+    </section>
+
+    <div class="version">记账本 v1.0 · 离线可用</div>
+  </main>
+
+  <!-- 底部导航 -->
+  <nav class="tabbar">
+    <button class="tab-btn active" data-page="home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9"/><path d="M5 10v10h14V10"/></svg>
+      <span>首页</span>
+    </button>
+    <button class="tab-btn" data-page="list">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      <span>账单</span>
+    </button>
+    <button class="tab-btn add-btn" data-page="add" id="btn-add">
+      <span class="add-icon">+</span>
+    </button>
+    <button class="tab-btn" data-page="stats">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <span>统计</span>
+    </button>
+    <button class="tab-btn" data-page="profile">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span>我的</span>
+    </button>
+  </nav>
+</div>
+
+<!-- 新增记账弹窗 -->
+<div class="modal-overlay" id="add-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <button class="modal-close" id="add-close">✕</button>
+      <h3 class="modal-title" id="add-modal-title">记一笔</h3>
+      <button class="modal-save" id="add-save">保存</button>
+    </div>
+
+    <!-- 类型切换 -->
+    <div class="type-switch">
+      <button class="type-btn active" data-type="expense">支出</button>
+      <button class="type-btn" data-type="income">收入</button>
+    </div>
+
+    <!-- 金额 -->
+    <div class="amount-input-wrap">
+      <span class="currency">¥</span>
+      <input type="number" class="amount-input" id="tx-amount" placeholder="0.00" inputmode="decimal" step="0.01" />
+    </div>
+
+    <!-- 分类 -->
+    <div class="section-label">分类</div>
+    <div class="category-grid" id="category-grid"></div>
+
+    <!-- 日期 & 备注 -->
+    <div class="field-row">
+      <div class="field">
+        <label class="field-label">日期</label>
+        <input type="date" class="field-input" id="tx-date" />
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field full">
+        <label class="field-label">备注</label>
+        <input type="text" class="field-input" id="tx-note" placeholder="添加备注（可选）" maxlength="50" />
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 月份选择弹窗 -->
+<div class="modal-overlay" id="month-modal">
+  <div class="modal small">
+    <div class="modal-header">
+      <button class="modal-close" id="month-close">✕</button>
+      <h3 class="modal-title">选择月份</h3>
+      <div style="width:30px"></div>
+    </div>
+    <div class="month-picker" id="month-picker"></div>
+  </div>
+</div>
+
+<!-- 详情弹窗 -->
+<div class="modal-overlay" id="detail-modal">
+  <div class="modal small">
+    <div class="modal-header">
+      <button class="modal-close" id="detail-close">✕</button>
+      <h3 class="modal-title">账单详情</h3>
+      <button class="modal-save danger" id="detail-delete">删除</button>
+    </div>
+    <div class="detail-content" id="detail-content"></div>
+  </div>
+</div>
+
+<!-- 分类管理弹窗 -->
+<div class="modal-overlay" id="cat-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <button class="modal-close" id="cat-close">✕</button>
+      <h3 class="modal-title">分类管理</h3>
+      <button class="modal-save" id="cat-add">新增</button>
+    </div>
+    <div class="cat-tabs">
+      <button class="cat-tab active" data-type="expense">支出</button>
+      <button class="cat-tab" data-type="income">收入</button>
+    </div>
+    <div class="cat-list" id="cat-list"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
